@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  --bg-color: #111;
+  --primary-text-color: #fff
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+html,
+body {
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--primary-text-color);
+}
+
+/* For Tablets */
+@media (max-width: 1024px) {}
+
+/* For Mobiles */
+@media (max-width: 768px) {}
