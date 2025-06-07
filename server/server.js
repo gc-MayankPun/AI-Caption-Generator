@@ -44,7 +44,7 @@ app.post(
       await deleteTempFile(imagePath);
       return res.status(500).json({
         success: false,
-        message: "Failed to generate caption.",
+        message: error.message || "Failed to generate caption.",
       });
     }
   }

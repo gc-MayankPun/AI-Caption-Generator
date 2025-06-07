@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 import { MdContentCopy } from "react-icons/md";
 import { toast } from "react-toastify";
 

@@ -1,9 +1,10 @@
 const { encode } = require("gpt-3-encoder");
+const { MAX_TOKENS } = require("./constants");
 
-const tokenLimitChecker = (message, maxTokens = 200) => {
+const tokenLimitChecker = (message) => {
   if (!message || typeof message !== "string") return false;
   const tokenCount = encode(message).length;
-  return tokenCount <= maxTokens;
+  return tokenCount <= MAX_TOKENS;
 };
 
-module.exports = tokenLimitChecker
+module.exports = tokenLimitChecker;

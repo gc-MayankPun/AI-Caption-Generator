@@ -1,5 +1,6 @@
 const { GoogleGenAI } = require("@google/genai");
 const fs = require("fs");
+const { TIMEOUT_MS } = require("./constants");
 
 const generateCaption = async (tone, prompt, imagePath) => {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -33,10 +34,16 @@ Caption should:
   // Add text prompt
   contents.push({ text: fullPrompt });
 
-  const response = await ai.models.generateContent({
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("AI response timed out 😢")), TIMEOUT_MS)
+  );
+
+  const responsePromise = ai.models.generateContent({
     model: "gemini-2.0-flash",
     contents: contents,
   });
+
+  const response = await Promise.race([responsePromise, timeoutPromise]);
   return response.text;
 };
 
