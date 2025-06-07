@@ -1,34 +1,28 @@
-export const apiClient = async (endpoint, method = "GET", data = null) => {
+import axios from "axios";
+
+export const apiClient = async (endpoint, method = "POST", data = null) => {
   try {
-    const options = {
+    const url = `${import.meta.env.VITE_SERVER_URL}${
+      import.meta.env.VITE_API_VERSION
+    }${endpoint}`;
+
+    const config = {
       method,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      url,
+      data,
+      headers: {},
     };
 
-    if (data && method !== "GET" && method !== "HEAD") {
-      options.body = JSON.stringify(data);
+    // Let Axios automatically set the correct Content-Type + boundary
+    if (!(data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(
-      `${import.meta.env.VITE_SERVER_URL}${endpoint}`,
-      options
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage = errorData?.message || response.statusText;
-      throw new Error(errorMessage);
-    }
-
-    if (response.status === 204) {
-      return null;
-    }
-
-    const responseData = await response.json();
-    return responseData;
+    const response = await axios(config);
+    return response.data;
   } catch (error) {
-    throw error;
+    const message =
+      error.response?.data?.message || error.message || "Request failed";
+    throw new Error(message);
   }
 };

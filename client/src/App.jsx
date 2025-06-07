@@ -11,7 +11,7 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <main className="h-[100dvh] py-[2rem] px-[1rem] lg:px-[2rem]">
+      <main className="py-[1rem] px-[1rem]">
         <Logo />
         <div className="border-[.1rem] border-[var(--secondary-text-color)] mt-3 rounded-2xl bg-[white]/10 backdrop-blur-xs px-[1rem] lg:px-[2rem] py-[2rem] lg:w-[55%] m-auto">
           <CaptionUploader setCaptionLogs={setCaptionLogs} />
@@ -24,6 +24,7 @@ const App = () => {
           hideProgressBar={false}
           newestOnTop={false}
           closeOnClick
+          closeButton={false}
           rtl={false}
           pauseOnFocusLoss
           draggable

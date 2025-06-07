@@ -2,8 +2,6 @@ import Input from "./Input";
 import FileUploader from "./FileUploader";
 import Selector from "./Selector";
 import { useCallback, useState } from "react";
-import { generatePrompt } from "@/api/generatePrompt";
-import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import useGenerateCaption from "@/hooks/useGenerateCaption";
 
@@ -19,7 +17,7 @@ const CaptionUploader = ({ setCaptionLogs }) => {
 
   const handleSubmit = useCallback(
     (event) => {
-      event.preventDefault();
+      event.preventDefault(); 
       if (prompt.trim() === "" && !uploadedFile) {
         toast.info("Please provide either a prompt or upload an image. 🥺");
         return;

@@ -22,9 +22,11 @@ const CaptionLogs = memo(({ captionLogs }) => {
   }
 
   return (
-    <div className="w-full mt-[2rem]">
+    <div className="caption-logs w-full mt-[2rem] h-[25dvh] overflow-y-auto overflow-x-hidden">
       <div
-        className={`grid ${captionLogs.length > 1 && "grid-cols-2"} gap-[1rem]`}
+        className={`grid grid-cols-1 ${
+          captionLogs.length > 1 && "lg:grid-cols-2"
+        } gap-[1rem]`}
       >
         {captionLogs.map((caption, index) => {
           return (

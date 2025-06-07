@@ -9,8 +9,8 @@ import {
 
 const Selector = memo(({ handleToneChange }) => {
   return (
-    <div className="border-[.1rem] border-[var(--secondary-text-color)] w-full h-fit lg:h-[10rem] rounded-2xl px-[1rem] py-[1rem]">
-      <p className="mb-1 text-xl text-[var(--secondary-text-color)]">
+    <div className="w-full h-fit lg:h-[10rem] rounded-2xl">
+      <p className="tone mb-1 text-xl text-[var(--secondary-text-color)]">
         Select Tone
       </p>
       <ToneSelector onSelect={handleToneChange} />
@@ -61,6 +61,36 @@ const ToneSelector = ({ onSelect }) => {
           className="hover:bg-[var(--hover-bg)] px-4 py-2 cursor-pointer"
         >
           Professional
+        </SelectItem>
+        <SelectItem
+          value="witty"
+          className="hover:bg-[var(--hover-bg)] px-4 py-2 cursor-pointer"
+        >
+          Witty
+        </SelectItem>
+        <SelectItem
+          value="chill"
+          className="hover:bg-[var(--hover-bg)] px-4 py-2 cursor-pointer"
+        >
+          Chill
+        </SelectItem>
+        <SelectItem
+          value="luxury"
+          className="hover:bg-[var(--hover-bg)] px-4 py-2 cursor-pointer"
+        >
+          Luxury
+        </SelectItem>
+        <SelectItem
+          value="dark humor"
+          className="hover:bg-[var(--hover-bg)] px-4 py-2 cursor-pointer"
+        >
+          Dark Humor
+        </SelectItem>
+        <SelectItem
+          value="nostalgic"
+          className="hover:bg-[var(--hover-bg)] px-4 py-2 cursor-pointer"
+        >
+          Nostalgic
         </SelectItem>
       </SelectContent>
     </Select>

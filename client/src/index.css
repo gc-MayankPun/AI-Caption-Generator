@@ -4,8 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --bg-color: radial-gradient(circle at top right, #1d1034, #0f0c1a 80%); 
-  --primary-text-color: #e5e7eb; 
+  --bg-color: radial-gradient(circle at top right, #1d1034, #0f0c1a 80%);
+  --primary-text-color: #e5e7eb;
   --secondary-text-color: #9ca3af;
   --secondary-bg-color: #1f1f2e;
   --hover-bg: #2a2a3b;
@@ -60,11 +60,23 @@ body {
   color: var(--primary-text-color);
 }
 
+.caption-logs {
+  scrollbar-width: thin;
+  scrollbar-color: grey transparent;
+  scrollbar-gutter: auto;
+  padding-right: .5rem;
+}
+
 /* For Tablets */
 @media (max-width: 1024px) {}
 
 /* For Mobiles */
 @media (max-width: 768px) {}
+@media (max-width: 375px) {
+  .tone{
+    /* display: none; */
+  }
+}
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
