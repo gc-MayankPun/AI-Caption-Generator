@@ -1,19 +1,20 @@
 const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
+const { ChatMistralAI } = require("@langchain/mistralai");
 const { TIMEOUT_MS } = require("../utils/constants");
 const { buildPrompt } = require("../utils/utils");
+const fs = require("fs");
 
 const geminiModel = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash-lite",
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-const generateCaption = async ({
-  tone,
-  prompt,
-  platform,
-  imageBuffer,
-  mimeType,
-}) => {
+const mistralModel = new ChatMistralAI({
+  model: "mistral-small-latest",
+  apiKey: process.env.MISTRAL_API_KEY,
+});
+
+const generateCaption = async ({ tone, prompt, platform, imagePath }) => {
   const fullPrompt = buildPrompt({
     tone,
     userPrompt: prompt,
@@ -22,14 +23,16 @@ const generateCaption = async ({
 
   const messageParts = [];
 
-  // Image handling (from memory buffer)
-  if (imageBuffer) {
-    const base64Image = imageBuffer.toString("base64");
+  // Image handling
+  if (imagePath) {
+    const base64ImageFile = fs.readFileSync(imagePath, {
+      encoding: "base64",
+    });
 
     messageParts.push({
       type: "image_url",
       image_url: {
-        url: `data:${mimeType || "image/jpeg"};base64,${base64Image}`,
+        url: `data:image/jpeg;base64,${base64ImageFile}`,
       },
     });
   }
@@ -44,7 +47,7 @@ const generateCaption = async ({
     setTimeout(() => reject(new Error("AI response timed out 😢")), TIMEOUT_MS),
   );
 
-  const responsePromise = geminiModel.invoke([
+  const responsePromise = mistralModel.invoke([
     {
       role: "user",
       content: messageParts,
