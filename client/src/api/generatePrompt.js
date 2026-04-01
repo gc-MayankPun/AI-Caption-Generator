@@ -1,4 +1,5 @@
-import { resizeImage, base64ToFile } from "../utils/imageResolution";
+import { resizeImage, base64ToFile } from "../utils/imageResolution";  
+import { apiClient } from "./apiInstance";
 
 export const generatePrompt = async (prompt, tone, uploadedFile, platform) => {
   const formData = new FormData();
@@ -8,23 +9,12 @@ export const generatePrompt = async (prompt, tone, uploadedFile, platform) => {
   formData.append("platform", platform);
 
   if (uploadedFile) {
-    // Resize image before upload
     const base64 = await resizeImage(uploadedFile);
     const resizedFile = base64ToFile(base64, uploadedFile.name);
     formData.append("image", resizedFile);
   }
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/generate`, {
-    method: "POST",
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.message || "Failed to generate caption");
-  }
-
-  const data = await response.json();
+  const data = await apiClient("/generate", "POST", formData);
 
   return {
     caption: data.caption || data,

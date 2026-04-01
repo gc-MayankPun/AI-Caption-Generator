@@ -1,14 +1,19 @@
 const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 const { TIMEOUT_MS } = require("../utils/constants");
 const { buildPrompt } = require("../utils/utils");
-const fs = require("fs");
 
 const geminiModel = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash-lite",
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-const generateCaption = async ({tone, prompt, platform, imagePath}) => {
+const generateCaption = async ({
+  tone,
+  prompt,
+  platform,
+  imageBuffer,
+  mimeType,
+}) => {
   const fullPrompt = buildPrompt({
     tone,
     userPrompt: prompt,
@@ -17,16 +22,14 @@ const generateCaption = async ({tone, prompt, platform, imagePath}) => {
 
   const messageParts = [];
 
-  // Image support
-  if (imagePath) {
-    const base64ImageFile = fs.readFileSync(imagePath, {
-      encoding: "base64",
-    });
+  // Image handling (from memory buffer)
+  if (imageBuffer) {
+    const base64Image = imageBuffer.toString("base64");
 
     messageParts.push({
       type: "image_url",
       image_url: {
-        url: `data:image/jpeg;base64,${base64ImageFile}`,
+        url: `data:${mimeType || "image/jpeg"};base64,${base64Image}`,
       },
     });
   }

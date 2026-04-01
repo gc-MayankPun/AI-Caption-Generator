@@ -1,43 +1,20 @@
 const multer = require("multer");
 const crypto = require("crypto");
-const path = require("path");
-const fs = require("fs");
-const fsPromises = require("fs").promises;
+const { FILE_SIZE_LIMIT } = require("./constants");
 
-// Construct absolute path to 'temp/uploads'
-const uploadPath = path.join(__dirname, "..", "temp", "uploads");
+const storage = multer.memoryStorage();
 
-// ✅ Ensure the directory exists
-fs.mkdirSync(uploadPath, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadPath); // Now safe because the folder exists
-  },
-  filename: function (req, file, cb) {
-    crypto.randomBytes(12, (err, bytes) => {
-      if (err) return cb(err); // handle error
-      const fileName =
-        bytes.toString("hex") +
-        "__-__" +
-        file.fieldname +
-        "__-__" +
-        path.extname(file.originalname);
-      cb(null, fileName);
-    });
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: FILE_SIZE_LIMIT
   },
 });
 
-const deleteTempFile = async (filePath) => {
-  if (!filePath) return;
-
-  try {
-    await fsPromises.unlink(filePath);
-  } catch (err) {
-    console.error("Error deleting file:", err);
-  }
+const generateFileName = (originalName) => {
+  const bytes = crypto.randomBytes(12).toString("hex");
+  const ext = originalName.split(".").pop();
+  return `${bytes}__-__${Date.now()}__-__${ext}`;
 };
 
-const upload = multer({ storage: storage });
-
-module.exports = { upload, deleteTempFile };
+module.exports = { upload, generateFileName };

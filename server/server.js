@@ -4,20 +4,21 @@ require("dotenv").config();
 const cors = require("cors");
 const helmet = require("helmet");
 const generateCaption = require("./services/ai.service");
-const { upload, deleteTempFile } = require("./utils/multerUtil");
+const { upload } = require("./utils/multerUtil");
 const tokenLimitChecker = require("./utils/tokenLimitChecker");
 const limiter = require("./utils/rateLimiter");
+const path = require("path");
 
 app.disable("x-powered-by");
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "..", "public")));
 app.use(cors({ origin: process.env.FRONTEND_URL }));
 
 app.post(`/generate`, limiter, upload.single("image"), async (req, res) => {
   const { prompt, tone, platform } = req.body;
   const uploadedFile = req.file;
-  const imagePath = uploadedFile?.path || null;
 
   try {
     if ((!prompt || prompt.trim() === "") && !uploadedFile) {
@@ -37,12 +38,11 @@ app.post(`/generate`, limiter, upload.single("image"), async (req, res) => {
       tone: tone || "fun",
       prompt,
       platform,
-      imagePath,
+      imageBuffer: req.file?.buffer,
+      mimeType: req.file?.mimetype,
     });
-    await deleteTempFile(imagePath);
     return res.status(200).json({ success: true, caption });
   } catch (error) {
-    await deleteTempFile(imagePath);
     if (
       error?.status === 429 ||
       error?.message?.includes("RESOURCE_EXHAUSTED")
@@ -58,6 +58,10 @@ app.post(`/generate`, limiter, upload.single("image"), async (req, res) => {
       message: "Failed to generate caption.",
     });
   }
+});
+
+app.use("/{*path}", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "index.html"));
 });
 
 app.listen(process.env.PORT, () => {
