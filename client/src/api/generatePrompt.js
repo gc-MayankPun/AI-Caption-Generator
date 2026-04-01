@@ -1,19 +1,24 @@
-import { base64ToFile, resizeImage } from "@/utils/imageResolution";
-import { apiClient } from "./apiClient";
+import { resizeImage, base64ToFile } from "../utils/imageResolution";  
+import { apiClient } from "./apiInstance";
 
-export const generatePrompt = async (prompt, tone, uploadedFile) => {
+export const generatePrompt = async (prompt, tone, uploadedFile, platform) => {
   const formData = new FormData();
-  formData.append("prompt", prompt);
+
+  if (prompt) formData.append("prompt", prompt);
   formData.append("tone", tone);
+  formData.append("platform", platform);
 
   if (uploadedFile) {
-    const base64Image = await resizeImage(uploadedFile, 1920, 1080);
-    const resizedFile = base64ToFile(base64Image, uploadedFile.name);
+    const base64 = await resizeImage(uploadedFile);
+    const resizedFile = base64ToFile(base64, uploadedFile.name);
     formData.append("image", resizedFile);
   }
 
-  const result = await apiClient("/generate", "POST", formData);
-  
-  if (!result.success) throw new Error(result.message);
-  return result.caption;
+  const data = await apiClient("/generate", "POST", formData);
+
+  return {
+    caption: data.caption || data,
+    platform,
+    tone,
+  };
 };
