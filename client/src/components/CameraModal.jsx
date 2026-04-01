@@ -5,60 +5,98 @@ const CameraModal = ({ onCapture, onClose }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+  const isMountedRef = useRef(true);
 
-  const [facingMode, setFacingMode] = useState("environment"); // back camera by default
-  const [capturedImage, setCapturedImage] = useState(null); // base64 preview
+  const [facingMode, setFacingMode] = useState("environment");
+  const [capturedImage, setCapturedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
 
+  const stopStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+  }, []);
+
   const startCamera = useCallback(
     async (mode) => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-      }
+      stopStream(); // fully stop the previous stream before requesting a new one
+
+      if (!isMountedRef.current) return;
       setIsLoading(true);
       setCapturedImage(null);
+
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: mode,
+            // "ideal" won't hard-fail on desktop where facingMode is unsupported
+            facingMode: { ideal: mode },
             width: { ideal: 1280 },
             height: { ideal: 720 },
           },
           audio: false,
         });
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play();
+
+        // Component may have unmounted while we awaited — release immediately
+        if (!isMountedRef.current) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
         }
 
-        // check if device has multiple cameras
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          // play() returns a promise — catch autoplay policy errors silently
+          await videoRef.current.play().catch(() => {});
+        }
+
+        // Labels are only populated after permission is granted, so enumerate here
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter((d) => d.kind === "videoinput");
-        setHasMultipleCameras(videoDevices.length > 1);
+        if (isMountedRef.current) {
+          setHasMultipleCameras(videoDevices.length > 1);
+        }
       } catch (err) {
-        toast.error("Camera access denied or unavailable.");
-        onClose();
+        if (isMountedRef.current) {
+          toast.error("Camera access denied or unavailable.");
+          onClose();
+        }
       } finally {
-        setIsLoading(false);
+        if (isMountedRef.current) {
+          setIsLoading(false);
+        }
       }
     },
-    [onClose],
+    [stopStream, onClose],
   );
 
+  // Mount: start with back camera. Unmount: stop stream + mark as unmounted.
   useEffect(() => {
-    startCamera(facingMode);
+    isMountedRef.current = true;
+    startCamera("environment");
     return () => {
-      if (streamRef.current)
-        streamRef.current.getTracks().forEach((t) => t.stop());
+      isMountedRef.current = false;
+      stopStream();
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Re-start camera whenever facingMode changes.
+  // Skips the initial render (handled by the mount effect above).
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    startCamera(facingMode);
+  }, [facingMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // switchCamera only updates state — the effect above does the actual work.
+  // This avoids calling startCamera with a stale facingMode closure.
   const switchCamera = () => {
-    const newMode = facingMode === "environment" ? "user" : "environment";
-    setFacingMode(newMode);
-    startCamera(newMode);
+    setFacingMode((prev) => (prev === "environment" ? "user" : "environment"));
   };
 
   const capture = () => {
@@ -70,7 +108,7 @@ const CameraModal = ({ onCapture, onClose }) => {
     canvas.getContext("2d").drawImage(video, 0, 0);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
     setCapturedImage(dataUrl);
-    // pause stream while reviewing
+    // Pause the stream while the user reviews the photo
     streamRef.current?.getTracks().forEach((t) => (t.enabled = false));
   };
 
@@ -120,7 +158,7 @@ const CameraModal = ({ onCapture, onClose }) => {
                 ? "Front Camera"
                 : "Back Camera"}
           </span>
-          <button className="camera-close" onClick={onClose}>
+          <button className="camera-close" onClick={onClose} type="button">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path
                 d="M18 6L6 18M6 6l12 12"
@@ -158,7 +196,6 @@ const CameraModal = ({ onCapture, onClose }) => {
 
           <canvas ref={canvasRef} style={{ display: "none" }} />
 
-          {/* corner markers */}
           {!capturedImage && !isLoading && (
             <div className="viewfinder">
               <span className="vf-tl" />
@@ -177,7 +214,9 @@ const CameraModal = ({ onCapture, onClose }) => {
                   <button
                     className="cam-icon-btn"
                     onClick={switchCamera}
+                    type="button"
                     title="Flip camera"
+                    disabled={isLoading}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                       <path
@@ -205,14 +244,17 @@ const CameraModal = ({ onCapture, onClose }) => {
                   </button>
                 )}
               </div>
+
               <button
                 className="cam-shutter"
                 onClick={capture}
+                type="button"
                 disabled={isLoading}
                 title="Capture"
               >
                 <span className="cam-shutter-inner" />
               </button>
+
               <div className="cam-side-btn">
                 <span className="cam-mode-label">
                   {facingMode === "user" ? "Selfie" : "Back"}
@@ -221,7 +263,11 @@ const CameraModal = ({ onCapture, onClose }) => {
             </>
           ) : (
             <>
-              <button className="cam-action-btn retake" onClick={retake}>
+              <button
+                className="cam-action-btn retake"
+                onClick={retake}
+                type="button"
+              >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
                     d="M1 4v6h6"
@@ -240,7 +286,11 @@ const CameraModal = ({ onCapture, onClose }) => {
                 </svg>
                 Retake
               </button>
-              <button className="cam-action-btn accept" onClick={accept}>
+              <button
+                className="cam-action-btn accept"
+                onClick={accept}
+                type="button"
+              >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
                     d="M20 6L9 17l-5-5"
