@@ -26,7 +26,7 @@ const CaptionUploader = ({ setCaptionLogs }) => {
       }
       mutate({ prompt, tone, uploadedFile, platform });
     },
-    [prompt, tone, uploadedFile, platform]
+    [prompt, tone, uploadedFile, platform, mutate]
   );
 
   const canGenerate = prompt.trim() !== "" || !!uploadedFile;
