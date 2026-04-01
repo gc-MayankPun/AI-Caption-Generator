@@ -8,11 +8,11 @@ const geminiModel = new ChatGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-const generateCaption = async (tone, prompt, imagePath) => {
+const generateCaption = async ({tone, prompt, platform, imagePath}) => {
   const fullPrompt = buildPrompt({
     tone,
     userPrompt: prompt,
-    platform: "LinkedIn",
+    platform,
   });
 
   const messageParts = [];

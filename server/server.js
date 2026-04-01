@@ -5,8 +5,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 const generateCaption = require("./services/ai.service");
 const { upload, deleteTempFile } = require("./utils/multerUtil");
-const limiter = require("./utils/rateLimiter");
 const tokenLimitChecker = require("./utils/tokenLimitChecker");
+const limiter = require("./utils/rateLimiter");
 
 app.disable("x-powered-by");
 app.use(helmet());
@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: process.env.FRONTEND_URL }));
 
 app.post(`/generate`, limiter, upload.single("image"), async (req, res) => {
-  const { prompt, tone } = req.body;
+  const { prompt, tone, platform } = req.body;
   const uploadedFile = req.file;
   const imagePath = uploadedFile?.path || null;
 
@@ -33,7 +33,12 @@ app.post(`/generate`, limiter, upload.single("image"), async (req, res) => {
         .json({ success: false, message: "Prompt is too long 😿" });
     }
 
-    const caption = await generateCaption(tone || "fun", prompt, imagePath);
+    const caption = await generateCaption({
+      tone: tone || "fun",
+      prompt,
+      platform,
+      imagePath,
+    });
     await deleteTempFile(imagePath);
     return res.status(200).json({ success: true, caption });
   } catch (error) {
