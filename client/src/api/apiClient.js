@@ -1,14 +1,10 @@
 import axios from "axios";
 
 export const apiClient = async (endpoint, method = "POST", data = null) => {
-  try {
-    const url = `${import.meta.env.VITE_SERVER_URL}${
-      import.meta.env.VITE_API_VERSION
-    }${endpoint}`;
-
+  try { 
     const config = {
       method,
-      url,
+      url: `${import.meta.env.VITE_API_URL}${endpoint}`,
       data,
       headers: {},
     };
